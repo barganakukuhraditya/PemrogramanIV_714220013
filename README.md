@@ -1,0 +1,2 @@
+- Clean Flutter '''flutter clean'''
+- Running Ulang '''flutter pub get'''
