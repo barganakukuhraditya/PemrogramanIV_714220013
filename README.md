@@ -1,2 +1,3 @@
 - Clean Flutter ```flutter clean```
 - Running Ulang ```flutter pub get```
+- Update to the Latest Version ```flutter upgrade```
