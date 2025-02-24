@@ -84,7 +84,7 @@ class _MyInputFormState extends State<MyInputForm> {
                   shrinkWrap: true,
                   itemCount: _myDataList.length,
                   itemBuilder: (context, index) {
-                    final data = _myDataList[index];
+                    final   data = _myDataList[index];
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
