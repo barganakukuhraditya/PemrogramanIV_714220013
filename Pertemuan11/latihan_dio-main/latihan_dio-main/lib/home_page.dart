@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:latihan_dio/data_service.dart';
+import 'package:latihan_dio/user.dart';
+import 'package:latihan_dio/user_card.dart';
+import 'package:latihan_dio/card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -8,10 +12,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final DataService _dataService = DataService();
   final _formKey = GlobalKey<FormState>();
   final _nameCtl = TextEditingController();
   final _jobCtl = TextEditingController();
   String _result = '-';
+  List<User> _users = [];
+  UserCreate? usCreate;
+  UserUpdate? usUpdate;
 
   @override
   void dispose() {
@@ -63,28 +71,83 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        final res = await _dataService.getUsers();
+                        if (res != null) {
+                          setState(() {
+                            _result = res.toString();
+                          });
+                        } else {
+                          displaySnackbar('Failed to get data');
+                        }
+                      },
                       child: const Text('GET'),
                     ),
                   ),
                   const SizedBox(width: 8.0),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        if (_nameCtl.text.isEmpty || _jobCtl.text.isEmpty) {
+                          displaySnackbar('Semua field harus diisi!');
+                          return;
+                        }
+
+                        final postModel = UserCreate(
+                          name: _nameCtl.text,
+                          job: _jobCtl.text,
+                        );
+                        UserCreate? res = await _dataService.postUser(postModel);
+
+                        setState(() {
+                          _result = res.toString();
+                          usCreate = res;
+                        });
+
+                        _nameCtl.clear();
+                        _jobCtl.clear();
+
+                      },
                       child: const Text('POST'),
                     ),
                   ),
                   const SizedBox(width: 8.0),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        if (_nameCtl.text.isEmpty || _jobCtl.text.isEmpty) {
+                          displaySnackbar('Semua field harus diisi!');
+                          return;
+                        }
+
+                        final putModel = UserUpdate(
+                          '60',
+                          name: _nameCtl.text,
+                          job: _jobCtl.text, id: '60',
+                        );
+                        UserUpdate? res = await _dataService.putUser(putModel.id, putModel);
+
+                        setState(() {
+                          _result = res.toString();
+                          usUpdate = res;
+                        });
+                        
+                        _nameCtl.clear();
+                        _jobCtl.clear();
+
+                      },
                       child: const Text('PUT'),
                     ),
                   ),
                   const SizedBox(width: 8.0),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        final res = await _dataService.deleteUser('1');
+                        setState(() {
+                          _result = res.toString();
+                        });
+                      },
                       child: const Text('DELETE'),
                     ),
                   ),
@@ -94,13 +157,25 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        final users = await _dataService.getUserModel();
+                        setState(() {
+                          _users = users!.toList();
+                        });
+                      },
                       child: const Text('Model Class User Example'),
                     ),
                   ),
                   const SizedBox(width: 8.0),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        _result = '-';
+                        _users.clear();
+                        usCreate = null;
+                        return;
+                      });
+                    },
                     child: const Text('Reset'),
                   ),
                 ],
@@ -115,8 +190,9 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 8.0),
               Expanded(
-                child: Text(_result),
+                child: _users.isEmpty ? Text(_result) : _buildListUser(),
               ),
+              hasilCard(context),
               const SizedBox(
                 height: 20,
               ),
@@ -131,4 +207,37 @@ class _HomePageState extends State<HomePage> {
     return ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(msg)));
   }
+
+  Widget _buildListUser() {
+    return ListView.separated(
+      itemBuilder: (context, index) {
+        final user = _users[index];
+        return Card(
+          child: ListTile(
+            leading: ClipRRect(
+              borderRadius: BorderRadius.circular(20.0),
+              child: Image.network(user.avatar),
+            ),
+            title: Text('${user.firstName} ${user.lastName}'),
+            subtitle: Text(user.email),
+          ),
+        );
+      },
+    separatorBuilder: (context, index) => const SizedBox(height: 10.0),
+    itemCount: _users.length);
+  }
+
+  Widget hasilCard(BuildContext context) {
+    return Column(children: [
+      if (usCreate != null) UserCard(
+        usrCreate: usCreate!,
+      ) 
+      else if (usUpdate != null) UpCard(
+        usrUpdate: usUpdate!,
+      )
+      else
+        const Text('no data'),
+    ]);
+  }
+  
 }
